@@ -21,6 +21,7 @@ const (
 enum ButtonState {
 	normal
 	pressed
+	mouse_down
 }
 
 type ButtonClickFn = fn (voidptr, voidptr) // userptr, btn
@@ -63,6 +64,7 @@ fn (mut b Button) init(parent Layout) {
 	}
 	mut subscriber := parent.get_subscriber()
 	subscriber.subscribe_method(events.on_click, btn_click, b)
+	subscriber.subscribe_method(events.on_mouse_down, btn_touchdown, b)
 }
 
 pub fn button(c ButtonConfig) &Button {
@@ -92,6 +94,16 @@ fn btn_click(mut b Button, e &MouseEvent, window &Window) {
 			if b.onclick != voidptr(0) {
 				b.onclick(window.state, b)
 			}
+		}
+	}
+}
+
+fn btn_touchdown(mut b Button, e &MouseEvent, window &Window) {
+	if b.point_inside(e.x,  e.y){
+		if e.action == .down {
+			b.state = .mouse_down
+		} else if e.action == 0 {
+			b.state = .mouse_down
 		}
 	}
 }
@@ -126,6 +138,7 @@ fn (mut b Button) draw() {
 	h2 := b.text_height / 2
 	bcenter_x := b.x + b.width / 2
 	bcenter_y := b.y + b.height / 2
+
 	bg_color := if b.state == .normal { gx.white } else { progress_bar_background_color } // gx.gray }
 	b.ui.gg.draw_rect(b.x, b.y, b.width, b.height, bg_color) // gx.white)
 	b.ui.gg.draw_empty_rect(b.x, b.y, b.width, b.height, button_border_color)
